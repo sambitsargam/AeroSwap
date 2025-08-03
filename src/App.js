@@ -5,6 +5,7 @@ import HybridHTLC from './services/htlc';
 import MEVShield from './services/mevShield';
 import PartialFillEngine from './services/partialFill';
 import ChainManager from './services/chainAdapter';
+import DemoInterface from './components/DemoInterface';
 import './App.css';
 
 function App() {
@@ -756,6 +757,12 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* Demo Interface */}
+      <DemoInterface 
+        walletConnected={walletConnected}
+        walletAddress={walletAddress}
+      />
 
       <footer className="footer">
         <p>Powered by 1inch Protocol • Built with ❤️ for DeFi</p>
