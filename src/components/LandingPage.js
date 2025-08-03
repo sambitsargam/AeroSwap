@@ -279,6 +279,304 @@ const LandingPage = ({ onEnterApp }) => {
         </div>
       </section>
 
+      {/* Technology Section */}
+      <section className="technology-section">
+        <div className="section-header">
+          <h2>Powered by Cutting-Edge Technology</h2>
+          <p>Built on the most advanced DeFi protocols and security standards</p>
+        </div>
+
+        <div className="tech-grid">
+          <div className="tech-card">
+            <div className="tech-icon">🔐</div>
+            <h3>Hash-Time-Lock Contracts</h3>
+            <p>Atomic swaps with cryptographic security ensuring trustless cross-chain transactions</p>
+            <div className="tech-details">
+              <span>• ECDSA & EdDSA support</span>
+              <span>• Timeout protection</span>
+              <span>• Secret reveal mechanism</span>
+            </div>
+          </div>
+
+          <div className="tech-card">
+            <div className="tech-icon">⚡</div>
+            <h3>1inch Protocol Integration</h3>
+            <p>Best-in-class DEX aggregation providing optimal swap rates across multiple protocols</p>
+            <div className="tech-details">
+              <span>• 100+ DEX sources</span>
+              <span>• Gas optimization</span>
+              <span>• Real-time pricing</span>
+            </div>
+          </div>
+
+          <div className="tech-card">
+            <div className="tech-icon">🛡️</div>
+            <h3>MEV Protection Suite</h3>
+            <p>Advanced commit-reveal schemes and private mempools to protect against front-running</p>
+            <div className="tech-details">
+              <span>• Commit-reveal batching</span>
+              <span>• Private mempool access</span>
+              <span>• FIFO order execution</span>
+            </div>
+          </div>
+
+          <div className="tech-card">
+            <div className="tech-icon">🧩</div>
+            <h3>Partial Fill Engine</h3>
+            <p>Intelligent order splitting and liquidity provider matching for large transactions</p>
+            <div className="tech-details">
+              <span>• Dynamic order splitting</span>
+              <span>• LP matching algorithm</span>
+              <span>• Slippage minimization</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="how-it-works-section">
+        <div className="section-header">
+          <h2>How AeroSwap Works</h2>
+          <p>Simple steps to experience the future of cross-chain trading</p>
+        </div>
+
+        <div className="steps-container">
+          <div className="step-item">
+            <div className="step-number">1</div>
+            <div className="step-content">
+              <h3>Connect Your Wallet</h3>
+              <p>Securely connect MetaMask or any Web3 wallet to start trading</p>
+              <div className="step-visual">
+                <div className="wallet-icon">👛</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="step-connector"></div>
+
+          <div className="step-item">
+            <div className="step-number">2</div>
+            <div className="step-content">
+              <h3>Select Tokens & Chains</h3>
+              <p>Choose from 1000+ tokens across 5+ blockchain networks</p>
+              <div className="step-visual">
+                <div className="token-selector">
+                  <span className="token-a">ETH</span>
+                  <span className="swap-arrow">↔</span>
+                  <span className="token-b">USDC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="step-connector"></div>
+
+          <div className="step-item">
+            <div className="step-number">3</div>
+            <div className="step-content">
+              <h3>Choose Protection Mode</h3>
+              <p>Enable MEV protection, partial fills, or cross-chain routing</p>
+              <div className="step-visual">
+                <div className="protection-modes">
+                  <span className="mode-icon">🛡️</span>
+                  <span className="mode-icon">📦</span>
+                  <span className="mode-icon">🌉</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="step-connector"></div>
+
+          <div className="step-item">
+            <div className="step-number">4</div>
+            <div className="step-content">
+              <h3>Execute Swap</h3>
+              <p>Confirm transaction and enjoy secure, optimized trading</p>
+              <div className="step-visual">
+                <div className="success-checkmark">✅</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security Section */}
+      <section className="security-section">
+        <div className="section-header">
+          <h2>Enterprise-Grade Security</h2>
+          <p>Your funds and data are protected by military-grade security protocols</p>
+        </div>
+
+        <div className="security-grid">
+          <div className="security-feature">
+            <div className="security-icon">🔒</div>
+            <h3>Smart Contract Audits</h3>
+            <p>All contracts audited by leading security firms</p>
+          </div>
+
+          <div className="security-feature">
+            <div className="security-icon">🔑</div>
+            <h3>Non-Custodial</h3>
+            <p>You maintain full control of your private keys</p>
+          </div>
+
+          <div className="security-feature">
+            <div className="security-icon">🛡️</div>
+            <h3>MEV Protection</h3>
+            <p>Advanced protection against front-running attacks</p>
+          </div>
+
+          <div className="security-feature">
+            <div className="security-icon">⚡</div>
+            <h3>Real-time Monitoring</h3>
+            <p>24/7 system monitoring and anomaly detection</p>
+          </div>
+
+          <div className="security-feature">
+            <div className="security-icon">🌐</div>
+            <h3>Decentralized</h3>
+            <p>No single point of failure or central authority</p>
+          </div>
+
+          <div className="security-feature">
+            <div className="security-icon">🔐</div>
+            <h3>Encrypted Communications</h3>
+            <p>End-to-end encryption for all data transmission</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="testimonials-section">
+        <div className="section-header">
+          <h2>Trusted by DeFi Traders Worldwide</h2>
+          <p>See what our community is saying about AeroSwap</p>
+        </div>
+
+        <div className="testimonials-grid">
+          <div className="testimonial-card">
+            <div className="testimonial-content">
+              "AeroSwap's MEV protection saved me thousands on large trades. The cross-chain functionality is seamless!"
+            </div>
+            <div className="testimonial-author">
+              <div className="author-avatar">👨‍💼</div>
+              <div className="author-info">
+                <div className="author-name">Alex Chen</div>
+                <div className="author-title">DeFi Portfolio Manager</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="testimonial-card">
+            <div className="testimonial-content">
+              "Finally, a DEX that understands the needs of institutional traders. Partial fills are a game-changer."
+            </div>
+            <div className="testimonial-author">
+              <div className="author-avatar">👩‍💻</div>
+              <div className="author-info">
+                <div className="author-name">Sarah Rodriguez</div>
+                <div className="author-title">Crypto Fund Director</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="testimonial-card">
+            <div className="testimonial-content">
+              "The UI is beautiful and the advanced features actually work. Best cross-chain experience I've had."
+            </div>
+            <div className="testimonial-author">
+              <div className="author-avatar">👨‍🔬</div>
+              <div className="author-info">
+                <div className="author-name">Marcus Weber</div>
+                <div className="author-title">DeFi Researcher</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="faq-section">
+        <div className="section-header">
+          <h2>Frequently Asked Questions</h2>
+          <p>Get answers to common questions about AeroSwap</p>
+        </div>
+
+        <div className="faq-container">
+          <div className="faq-item">
+            <div className="faq-question">
+              <span>What makes AeroSwap different from other DEXs?</span>
+              <span className="faq-toggle">+</span>
+            </div>
+            <div className="faq-answer">
+              AeroSwap combines advanced MEV protection, cross-chain atomic swaps, and partial fill capabilities in a single platform. Our hybrid HTLC technology enables truly trustless cross-chain trading.
+            </div>
+          </div>
+
+          <div className="faq-item">
+            <div className="faq-question">
+              <span>Which blockchains does AeroSwap support?</span>
+              <span className="faq-toggle">+</span>
+            </div>
+            <div className="faq-answer">
+              We support Ethereum, Polygon, Binance Smart Chain, Bitcoin, and Solana, with more chains being added regularly through our Universal Chain Adapter SDK.
+            </div>
+          </div>
+
+          <div className="faq-item">
+            <div className="faq-question">
+              <span>How does MEV protection work?</span>
+              <span className="faq-toggle">+</span>
+            </div>
+            <div className="faq-answer">
+              Our MEV shield uses commit-reveal schemes and private mempool access to prevent front-running. Orders are batched and executed in FIFO order to ensure fair pricing.
+            </div>
+          </div>
+
+          <div className="faq-item">
+            <div className="faq-question">
+              <span>Are there any fees for using AeroSwap?</span>
+              <span className="faq-toggle">+</span>
+            </div>
+            <div className="faq-answer">
+              AeroSwap charges a competitive 0.3% protocol fee on swaps. Gas fees depend on the source blockchain. MEV protection and partial fills are included at no extra cost.
+            </div>
+          </div>
+
+          <div className="faq-item">
+            <div className="faq-question">
+              <span>Is AeroSwap audited and secure?</span>
+              <span className="faq-toggle">+</span>
+            </div>
+            <div className="faq-answer">
+              Yes, all our smart contracts have been audited by leading security firms. We're non-custodial, meaning you always maintain control of your funds and private keys.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="newsletter-section">
+        <div className="newsletter-content">
+          <div className="newsletter-text">
+            <h2>Stay Updated</h2>
+            <p>Get the latest news, features, and updates from AeroSwap</p>
+          </div>
+          <div className="newsletter-form">
+            <input 
+              type="email" 
+              placeholder="Enter your email address"
+              className="newsletter-input"
+            />
+            <button className="newsletter-button">
+              Subscribe
+              <span className="button-arrow">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="cta-section">
         <div className="cta-content">
