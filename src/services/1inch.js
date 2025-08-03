@@ -1,53 +1,37 @@
-import axios from 'axios';
+import { ethers } from 'ethers';
 
-// 1inch API base URLs for different chains
-const API_BASE_URLS = {
-  1: 'https://api.1inch.dev/swap/v6.0/1',     // Ethereum
-  137: 'https://api.1inch.dev/swap/v6.0/137', // Polygon
-  56: 'https://api.1inch.dev/swap/v6.0/56',   // BNB Chain
+// 1inch API configuration
+const ONEINCH_API_BASE = 'https://api.1inch.dev';
+const SUPPORTED_CHAINS = {
+  1: { name: 'Ethereum', id: 1, symbol: 'ETH' },
+  137: { name: 'Polygon', id: 137, symbol: 'MATIC' },
+  56: { name: 'BNB Chain', id: 56, symbol: 'BNB' }
 };
 
 // 1inch Router contract addresses
-export const ROUTER_ADDRESSES = {
-  1: '0x111111125421cA6dc452d289314280a0f8842A65',   // Ethereum
-  137: '0x111111125421cA6dc452d289314280a0f8842A65', // Polygon
-  56: '0x111111125421cA6dc452d289314280a0f8842A65',  // BNB Chain
-};
-
-// Chain configurations
-export const SUPPORTED_CHAINS = {
-  1: {
-    name: 'Ethereum',
-    symbol: 'ETH',
-    decimals: 18,
-    rpcUrl: 'https://eth.public-rpc.com',
-    explorer: 'https://etherscan.io',
-  },
-  137: {
-    name: 'Polygon',
-    symbol: 'MATIC',
-    decimals: 18,
-    rpcUrl: 'https://polygon-rpc.com',
-    explorer: 'https://polygonscan.com',
-  },
-  56: {
-    name: 'BNB Chain',
-    symbol: 'BNB',
-    decimals: 18,
-    rpcUrl: 'https://bsc-dataseed.binance.org',
-    explorer: 'https://bscscan.com',
-  },
+const ROUTER_ADDRESSES = {
+  1: '0x111111125421ca6dc452d289314280a0f8842a65',
+  137: '0x111111125421ca6dc452d289314280a0f8842a65',
+  56: '0x111111125421ca6dc452d289314280a0f8842a65'
 };
 
 class OneInchService {
   constructor() {
-    this.apiKey = process.env.REACT_APP_1INCH_API_KEY;
+    // Get API key from environment variable
+    this.apiKey = process.env.REACT_APP_ONEINCH_API_KEY || null;
+    
+    if (this.apiKey) {
+      console.log('✅ 1inch API key loaded successfully');
+    } else {
+      console.warn('⚠️ 1inch API key not found. Some features may be rate limited.');
+    }
   }
 
+  // Get headers for API requests
   getHeaders() {
     const headers = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     };
     
     if (this.apiKey) {
@@ -57,159 +41,228 @@ class OneInchService {
     return headers;
   }
 
-  /**
-   * Get list of tokens available for a specific chain
-   */
+  // Fetch supported tokens for a chain
   async getTokens(chainId) {
     try {
-      const baseUrl = API_BASE_URLS[chainId];
-      if (!baseUrl) {
-        throw new Error(`Unsupported chain ID: ${chainId}`);
+      const response = await fetch(
+        `${ONEINCH_API_BASE}/swap/v6.0/${chainId}/tokens`,
+        {
+          headers: this.getHeaders()
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tokens: ${response.statusText}`);
       }
-
-      const response = await axios.get(`${baseUrl}/tokens`, {
-        headers: this.getHeaders(),
-      });
-
-      return response.data.tokens;
+      
+      const data = await response.json();
+      return data.tokens;
     } catch (error) {
       console.error('Error fetching tokens:', error);
-      throw new Error(`Failed to fetch tokens: ${error.message}`);
+      throw error;
     }
   }
 
-  /**
-   * Get quote for token swap
-   */
-  async getQuote(chainId, params) {
+  // Get quote for a swap
+  async getQuote(params) {
+    const { chainId, src, dst, amount } = params;
+    
     try {
-      const baseUrl = API_BASE_URLS[chainId];
-      if (!baseUrl) {
-        throw new Error(`Unsupported chain ID: ${chainId}`);
-      }
-
       const queryParams = new URLSearchParams({
-        src: params.fromToken,
-        dst: params.toToken,
-        amount: params.amount,
+        src,
+        dst,
+        amount: amount.toString(),
         includeTokensInfo: 'true',
-        includeProtocols: 'true',
-        includeGas: 'true',
+        includeProtocols: 'true'
       });
 
-      const response = await axios.get(`${baseUrl}/quote?${queryParams}`, {
-        headers: this.getHeaders(),
-      });
-
-      return response.data;
+      const response = await fetch(
+        `${ONEINCH_API_BASE}/swap/v6.0/${chainId}/quote?${queryParams}`,
+        {
+          headers: this.getHeaders()
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.description || `Quote failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error getting quote:', error);
-      throw new Error(`Failed to get quote: ${error.message}`);
+      throw error;
     }
   }
 
-  /**
-   * Get swap transaction data
-   */
-  async getSwap(chainId, params) {
+  // Get swap transaction data
+  async getSwap(params) {
+    const { chainId, src, dst, amount, from, slippage = 1 } = params;
+    
     try {
-      const baseUrl = API_BASE_URLS[chainId];
-      if (!baseUrl) {
-        throw new Error(`Unsupported chain ID: ${chainId}`);
-      }
-
       const queryParams = new URLSearchParams({
-        src: params.fromToken,
-        dst: params.toToken,
-        amount: params.amount,
-        from: params.from,
-        slippage: params.slippage || '1',
-        disableEstimate: 'false',
-        allowPartialFill: 'false',
+        src,
+        dst,
+        amount: amount.toString(),
+        from,
+        slippage: slippage.toString(),
+        disableEstimate: 'true'
       });
 
-      const response = await axios.get(`${baseUrl}/swap?${queryParams}`, {
-        headers: this.getHeaders(),
-      });
-
-      return response.data;
+      const response = await fetch(
+        `${ONEINCH_API_BASE}/swap/v6.0/${chainId}/swap?${queryParams}`,
+        {
+          headers: this.getHeaders()
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.description || `Swap failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error getting swap data:', error);
-      throw new Error(`Failed to get swap data: ${error.message}`);
+      throw error;
     }
   }
 
-  /**
-   * Get allowance for a token
-   */
-  async getAllowance(chainId, params) {
+  // Check if token needs approval
+  async checkAllowance(tokenAddress, ownerAddress, chainId, provider) {
     try {
-      const baseUrl = API_BASE_URLS[chainId];
-      if (!baseUrl) {
-        throw new Error(`Unsupported chain ID: ${chainId}`);
+      const routerAddress = ROUTER_ADDRESSES[chainId];
+      if (!routerAddress) {
+        throw new Error(`Unsupported chain: ${chainId}`);
       }
 
-      const queryParams = new URLSearchParams({
-        tokenAddress: params.tokenAddress,
-        walletAddress: params.walletAddress,
-      });
+      // ERC20 ABI for allowance function
+      const erc20Abi = [
+        'function allowance(address owner, address spender) view returns (uint256)'
+      ];
 
-      const response = await axios.get(`${baseUrl}/approve/allowance?${queryParams}`, {
-        headers: this.getHeaders(),
-      });
-
-      return response.data;
+      const contract = new ethers.Contract(tokenAddress, erc20Abi, provider);
+      const allowance = await contract.allowance(ownerAddress, routerAddress);
+      
+      return allowance;
     } catch (error) {
-      console.error('Error getting allowance:', error);
-      throw new Error(`Failed to get allowance: ${error.message}`);
+      console.error('Error checking allowance:', error);
+      throw error;
     }
   }
 
-  /**
-   * Get approve transaction data
-   */
-  async getApprove(chainId, params) {
+  // Approve token for 1inch router
+  async approveToken(tokenAddress, amount, chainId, signer) {
     try {
-      const baseUrl = API_BASE_URLS[chainId];
-      if (!baseUrl) {
-        throw new Error(`Unsupported chain ID: ${chainId}`);
+      const routerAddress = ROUTER_ADDRESSES[chainId];
+      if (!routerAddress) {
+        throw new Error(`Unsupported chain: ${chainId}`);
       }
 
-      const queryParams = new URLSearchParams({
-        tokenAddress: params.tokenAddress,
-        amount: params.amount || '115792089237316195423570985008687907853269984665640564039457584007913129639935', // Max uint256
-      });
+      // ERC20 ABI for approve function
+      const erc20Abi = [
+        'function approve(address spender, uint256 amount) returns (bool)'
+      ];
 
-      const response = await axios.get(`${baseUrl}/approve/transaction?${queryParams}`, {
-        headers: this.getHeaders(),
-      });
-
-      return response.data;
+      const contract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+      
+      // Use maximum uint256 for unlimited approval
+      const maxAmount = ethers.MaxUint256;
+      const tx = await contract.approve(routerAddress, maxAmount);
+      
+      return tx;
     } catch (error) {
-      console.error('Error getting approve data:', error);
-      throw new Error(`Failed to get approve data: ${error.message}`);
+      console.error('Error approving token:', error);
+      throw error;
     }
   }
 
-  /**
-   * Check if token needs approval
-   */
-  async checkApproval(chainId, tokenAddress, walletAddress, amount) {
+  // Execute swap transaction
+  async executeSwap(swapData, signer) {
     try {
-      const allowanceData = await this.getAllowance(chainId, {
-        tokenAddress,
-        walletAddress,
-      });
+      const { tx } = swapData;
+      
+      const transaction = {
+        to: tx.to,
+        data: tx.data,
+        value: tx.value || '0',
+        gasLimit: tx.gas,
+        gasPrice: tx.gasPrice
+      };
 
-      const allowance = BigInt(allowanceData.allowance);
-      const requiredAmount = BigInt(amount);
-
-      return allowance >= requiredAmount;
+      const txResponse = await signer.sendTransaction(transaction);
+      return txResponse;
     } catch (error) {
-      console.error('Error checking approval:', error);
-      return false;
+      console.error('Error executing swap:', error);
+      throw error;
     }
+  }
+
+  // Get popular tokens for a chain (fallback if API fails)
+  getPopularTokens(chainId) {
+    const popularTokens = {
+      1: [
+        {
+          address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          symbol: 'ETH',
+          name: 'Ethereum',
+          decimals: 18
+        },
+        {
+          address: '0xa0b86a33e6441b8c4a0ffe1d7a6c78b4e123d25e',
+          symbol: 'USDC',
+          name: 'USD Coin',
+          decimals: 6
+        },
+        {
+          address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+          symbol: 'USDT',
+          name: 'Tether USD',
+          decimals: 6
+        }
+      ],
+      137: [
+        {
+          address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          symbol: 'MATIC',
+          name: 'Polygon',
+          decimals: 18
+        },
+        {
+          address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+          symbol: 'USDC',
+          name: 'USD Coin',
+          decimals: 6
+        }
+      ]
+    };
+
+    return popularTokens[chainId] || [];
+  }
+
+  // Format amount with proper decimals
+  formatAmount(amount, decimals) {
+    return ethers.parseUnits(amount.toString(), decimals);
+  }
+
+  // Parse amount from wei
+  parseAmount(amount, decimals) {
+    return ethers.formatUnits(amount.toString(), decimals);
+  }
+
+  // Get supported chains
+  getSupportedChains() {
+    return SUPPORTED_CHAINS;
+  }
+
+  // Validate chain support
+  isChainSupported(chainId) {
+    return chainId in SUPPORTED_CHAINS;
   }
 }
 
-export default new OneInchService();
+// Create and export the service instance
+const oneInchService = new OneInchService();
+export default oneInchService;

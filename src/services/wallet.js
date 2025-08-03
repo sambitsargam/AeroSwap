@@ -1,267 +1,283 @@
 import { ethers } from 'ethers';
-import { SUPPORTED_CHAINS } from './1inch';
 
 class WalletService {
   constructor() {
     this.provider = null;
     this.signer = null;
-    this.account = null;
+    this.address = null;
     this.chainId = null;
+    this.isConnected = false;
   }
 
-  /**
-   * Check if MetaMask is installed
-   */
-  isMetaMaskInstalled() {
+  // Check if MetaMask is available
+  isMetaMaskAvailable() {
     return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
   }
 
-  /**
-   * Connect to MetaMask wallet
-   */
+  // Connect to wallet
   async connect() {
-    if (!this.isMetaMaskInstalled()) {
-      throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
-    }
-
     try {
-      // Request account access
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts found. Please unlock MetaMask.');
+      if (!this.isMetaMaskAvailable()) {
+        throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
       }
+
+      // Request account access
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
 
       // Create provider and signer
       this.provider = new ethers.BrowserProvider(window.ethereum);
       this.signer = await this.provider.getSigner();
-      this.account = accounts[0];
+      this.address = await this.signer.getAddress();
 
-      // Get current chain ID
+      // Get network info
       const network = await this.provider.getNetwork();
       this.chainId = Number(network.chainId);
 
-      // Set up event listeners
-      this.setupEventListeners();
+      this.isConnected = true;
+
+      // Listen for account changes
+      window.ethereum.on('accountsChanged', this.handleAccountsChanged.bind(this));
+      
+      // Listen for chain changes
+      window.ethereum.on('chainChanged', this.handleChainChanged.bind(this));
 
       return {
-        account: this.account,
-        chainId: this.chainId,
+        address: this.address,
+        chainId: this.chainId
       };
     } catch (error) {
-      console.error('Error connecting to wallet:', error);
-      throw new Error(`Failed to connect wallet: ${error.message}`);
+      console.error('Error connecting wallet:', error);
+      throw error;
     }
   }
 
-  /**
-   * Disconnect wallet
-   */
+  // Disconnect wallet
   disconnect() {
     this.provider = null;
     this.signer = null;
-    this.account = null;
+    this.address = null;
     this.chainId = null;
+    this.isConnected = false;
+
+    // Remove listeners
+    if (window.ethereum) {
+      window.ethereum.removeAllListeners('accountsChanged');
+      window.ethereum.removeAllListeners('chainChanged');
+    }
   }
 
-  /**
-   * Switch to a specific chain
-   */
-  async switchChain(targetChainId) {
-    if (!this.provider) {
-      throw new Error('Wallet not connected');
+  // Handle account changes
+  handleAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+      // User disconnected
+      this.disconnect();
+      window.location.reload();
+    } else {
+      // User switched accounts
+      window.location.reload();
     }
+  }
 
+  // Handle chain changes
+  handleChainChanged(chainId) {
+    // Reload the page when chain changes
+    window.location.reload();
+  }
+
+  // Switch to a specific chain
+  async switchChain(chainId) {
     try {
+      if (!this.isMetaMaskAvailable()) {
+        throw new Error('MetaMask is not available');
+      }
+
+      const chainIdHex = `0x${chainId.toString(16)}`;
+      
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${targetChainId.toString(16)}` }],
+        params: [{ chainId: chainIdHex }]
       });
 
-      this.chainId = targetChainId;
+      // Update local chain ID
+      this.chainId = chainId;
+      
       return true;
     } catch (error) {
-      // Chain not added to MetaMask
+      // If the chain is not added to MetaMask, add it
       if (error.code === 4902) {
-        return await this.addChain(targetChainId);
+        return await this.addChain(chainId);
       }
-      throw new Error(`Failed to switch chain: ${error.message}`);
+      console.error('Error switching chain:', error);
+      throw error;
     }
   }
 
-  /**
-   * Add a new chain to MetaMask
-   */
+  // Add a new chain to MetaMask
   async addChain(chainId) {
-    const chainConfig = SUPPORTED_CHAINS[chainId];
-    if (!chainConfig) {
-      throw new Error(`Unsupported chain ID: ${chainId}`);
-    }
-
     try {
+      const chainConfig = this.getChainConfig(chainId);
+      
+      if (!chainConfig) {
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+      }
+
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [
-          {
-            chainId: `0x${chainId.toString(16)}`,
-            chainName: chainConfig.name,
-            nativeCurrency: {
-              name: chainConfig.name,
-              symbol: chainConfig.symbol,
-              decimals: chainConfig.decimals,
-            },
-            rpcUrls: [chainConfig.rpcUrl],
-            blockExplorerUrls: [chainConfig.explorer],
-          },
-        ],
+        params: [chainConfig]
       });
 
       this.chainId = chainId;
       return true;
     } catch (error) {
-      throw new Error(`Failed to add chain: ${error.message}`);
+      console.error('Error adding chain:', error);
+      throw error;
     }
   }
 
-  /**
-   * Get account balance
-   */
-  async getBalance(address = null) {
-    if (!this.provider) {
-      throw new Error('Wallet not connected');
-    }
+  // Get chain configuration for adding to MetaMask
+  getChainConfig(chainId) {
+    const chainConfigs = {
+      1: {
+        chainId: '0x1',
+        chainName: 'Ethereum Mainnet',
+        nativeCurrency: {
+          name: 'Ethereum',
+          symbol: 'ETH',
+          decimals: 18
+        },
+        rpcUrls: ['https://mainnet.infura.io/v3/'],
+        blockExplorerUrls: ['https://etherscan.io/']
+      },
+      137: {
+        chainId: '0x89',
+        chainName: 'Polygon Mainnet',
+        nativeCurrency: {
+          name: 'MATIC',
+          symbol: 'MATIC',
+          decimals: 18
+        },
+        rpcUrls: ['https://polygon-rpc.com/'],
+        blockExplorerUrls: ['https://polygonscan.com/']
+      },
+      56: {
+        chainId: '0x38',
+        chainName: 'BNB Smart Chain',
+        nativeCurrency: {
+          name: 'BNB',
+          symbol: 'BNB',
+          decimals: 18
+        },
+        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+        blockExplorerUrls: ['https://bscscan.com/']
+      }
+    };
 
+    return chainConfigs[chainId];
+  }
+
+  // Get current wallet state
+  getWalletState() {
+    return {
+      isConnected: this.isConnected,
+      address: this.address,
+      chainId: this.chainId,
+      provider: this.provider,
+      signer: this.signer
+    };
+  }
+
+  // Format address for display
+  formatAddress(address) {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  // Get ETH balance
+  async getBalance(address = null) {
     try {
-      const account = address || this.account;
-      const balance = await this.provider.getBalance(account);
+      if (!this.provider) {
+        throw new Error('Provider not available');
+      }
+
+      const targetAddress = address || this.address;
+      if (!targetAddress) {
+        throw new Error('No address provided');
+      }
+
+      const balance = await this.provider.getBalance(targetAddress);
       return ethers.formatEther(balance);
     } catch (error) {
-      throw new Error(`Failed to get balance: ${error.message}`);
+      console.error('Error getting balance:', error);
+      throw error;
     }
   }
 
-  /**
-   * Get ERC20 token balance
-   */
+  // Get token balance
   async getTokenBalance(tokenAddress, address = null) {
-    if (!this.provider) {
-      throw new Error('Wallet not connected');
-    }
-
     try {
-      const account = address || this.account;
-      const tokenContract = new ethers.Contract(
-        tokenAddress,
-        [
-          'function balanceOf(address) view returns (uint256)',
-          'function decimals() view returns (uint8)',
-        ],
-        this.provider
-      );
+      if (!this.provider) {
+        throw new Error('Provider not available');
+      }
 
+      const targetAddress = address || this.address;
+      if (!targetAddress) {
+        throw new Error('No address provided');
+      }
+
+      // ERC20 ABI for balance function
+      const erc20Abi = [
+        'function balanceOf(address owner) view returns (uint256)',
+        'function decimals() view returns (uint8)'
+      ];
+
+      const contract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
       const [balance, decimals] = await Promise.all([
-        tokenContract.balanceOf(account),
-        tokenContract.decimals(),
+        contract.balanceOf(targetAddress),
+        contract.decimals()
       ]);
 
       return ethers.formatUnits(balance, decimals);
     } catch (error) {
-      throw new Error(`Failed to get token balance: ${error.message}`);
+      console.error('Error getting token balance:', error);
+      throw error;
     }
   }
 
-  /**
-   * Send transaction
-   */
-  async sendTransaction(txData) {
-    if (!this.signer) {
+  // Check if wallet is connected and on the correct chain
+  async validateConnection(requiredChainId = null) {
+    if (!this.isConnected) {
       throw new Error('Wallet not connected');
     }
 
-    try {
-      const tx = await this.signer.sendTransaction(txData);
-      return tx;
-    } catch (error) {
-      throw new Error(`Transaction failed: ${error.message}`);
+    if (requiredChainId && this.chainId !== requiredChainId) {
+      throw new Error(`Please switch to chain ${requiredChainId}`);
     }
+
+    return true;
   }
 
-  /**
-   * Estimate gas for transaction
-   */
-  async estimateGas(txData) {
-    if (!this.provider) {
-      throw new Error('Wallet not connected');
-    }
-
+  // Auto-connect if previously connected
+  async autoConnect() {
     try {
-      const gasEstimate = await this.provider.estimateGas(txData);
-      return gasEstimate;
-    } catch (error) {
-      throw new Error(`Failed to estimate gas: ${error.message}`);
-    }
-  }
-
-  /**
-   * Get current gas price
-   */
-  async getGasPrice() {
-    if (!this.provider) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const feeData = await this.provider.getFeeData();
-      return feeData.gasPrice;
-    } catch (error) {
-      throw new Error(`Failed to get gas price: ${error.message}`);
-    }
-  }
-
-  /**
-   * Setup event listeners for account and chain changes
-   */
-  setupEventListeners() {
-    if (!window.ethereum) return;
-
-    window.ethereum.on('accountsChanged', (accounts) => {
-      if (accounts.length === 0) {
-        this.disconnect();
-        window.location.reload();
-      } else if (accounts[0] !== this.account) {
-        this.account = accounts[0];
-        window.location.reload();
+      if (!this.isMetaMaskAvailable()) {
+        return false;
       }
-    });
 
-    window.ethereum.on('chainChanged', (chainId) => {
-      this.chainId = parseInt(chainId, 16);
-      window.location.reload();
-    });
-  }
-
-  /**
-   * Check if currently connected
-   */
-  isConnected() {
-    return this.account !== null && this.provider !== null;
-  }
-
-  /**
-   * Get current account
-   */
-  getAccount() {
-    return this.account;
-  }
-
-  /**
-   * Get current chain ID
-   */
-  getChainId() {
-    return this.chainId;
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      
+      if (accounts.length > 0) {
+        await this.connect();
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error auto-connecting:', error);
+      return false;
+    }
   }
 }
 
-export default new WalletService();
+// Create and export the service instance
+const walletService = new WalletService();
+export default walletService;
