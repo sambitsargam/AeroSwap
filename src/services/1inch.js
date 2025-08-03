@@ -1,24 +1,33 @@
 import { ethers } from 'ethers';
 
-// 1inch API configuration
+// 1inch API configuration - Updated for v6.0
 const ONEINCH_API_BASE = 'https://api.1inch.dev';
 const SUPPORTED_CHAINS = {
   1: { name: 'Ethereum', id: 1, symbol: 'ETH' },
   137: { name: 'Polygon', id: 137, symbol: 'MATIC' },
-  56: { name: 'BNB Chain', id: 56, symbol: 'BNB' }
+  56: { name: 'BNB Chain', id: 56, symbol: 'BNB' },
+  42161: { name: 'Arbitrum', id: 42161, symbol: 'ETH' },
+  10: { name: 'Optimism', id: 10, symbol: 'ETH' },
+  43114: { name: 'Avalanche', id: 43114, symbol: 'AVAX' }
 };
 
-// 1inch Router contract addresses
+// 1inch Router contract addresses (v6.0)
 const ROUTER_ADDRESSES = {
   1: '0x111111125421ca6dc452d289314280a0f8842a65',
   137: '0x111111125421ca6dc452d289314280a0f8842a65',
-  56: '0x111111125421ca6dc452d289314280a0f8842a65'
+  56: '0x111111125421ca6dc452d289314280a0f8842a65',
+  42161: '0x111111125421ca6dc452d289314280a0f8842a65',
+  10: '0x111111125421ca6dc452d289314280a0f8842a65',
+  43114: '0x111111125421ca6dc452d289314280a0f8842a65'
 };
 
 class OneInchService {
   constructor() {
     // Get API key from environment variable
     this.apiKey = process.env.REACT_APP_ONEINCH_API_KEY || null;
+    this.requestCount = 0;
+    this.lastRequestTime = 0;
+    this.rateLimitDelay = 100; // Minimum delay between requests (ms)
     
     if (this.apiKey) {
       console.log('✅ 1inch API key loaded successfully');
@@ -27,11 +36,26 @@ class OneInchService {
     }
   }
 
-  // Get headers for API requests
+  // Rate limiting helper
+  async waitForRateLimit() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.rateLimitDelay) {
+      const delay = this.rateLimitDelay - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    this.lastRequestTime = Date.now();
+    this.requestCount++;
+  }
+
+  // Get headers for API requests with improved error handling
   getHeaders() {
     const headers = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache'
     };
     
     if (this.apiKey) {
@@ -41,25 +65,100 @@ class OneInchService {
     return headers;
   }
 
+  // Enhanced fetch with retry logic and better error handling
+  async fetchWithRetry(url, options = {}, maxRetries = 3) {
+    await this.waitForRateLimit();
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            ...this.getHeaders(),
+            ...options.headers
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Handle different HTTP status codes
+        if (response.ok) {
+          return response;
+        }
+        
+        // Handle specific error codes
+        if (response.status === 429) {
+          // Rate limited - wait and retry
+          const retryAfter = response.headers.get('Retry-After') || 1;
+          console.warn(`Rate limited. Waiting ${retryAfter}s before retry...`);
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          continue;
+        }
+        
+        if (response.status === 401) {
+          throw new Error('Invalid API key. Please check your 1inch API key configuration.');
+        }
+        
+        if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.description || errorData.message || 'Bad request - check your parameters');
+        }
+        
+        if (response.status >= 500) {
+          // Server error - retry
+          if (attempt < maxRetries) {
+            console.warn(`Server error (${response.status}). Retrying attempt ${attempt + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - 1inch API is taking too long to respond');
+        }
+        
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        console.warn(`Attempt ${attempt} failed:`, error.message);
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
   // Fetch supported tokens for a chain
   async getTokens(chainId) {
     try {
-      const response = await fetch(
-        `${ONEINCH_API_BASE}/swap/v6.0/${chainId}/tokens`,
-        {
-          headers: this.getHeaders()
-        }
+      if (!this.isChainSupported(chainId)) {
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+      }
+
+      const response = await this.fetchWithRetry(
+        `${ONEINCH_API_BASE}/swap/v6.0/${chainId}/tokens`
       );
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tokens: ${response.statusText}`);
+      const data = await response.json();
+      
+      // Validate response structure
+      if (!data.tokens) {
+        console.warn('Invalid tokens response structure, using fallback');
+        return this.getPopularTokens(chainId);
       }
       
-      const data = await response.json();
       return data.tokens;
     } catch (error) {
       console.error('Error fetching tokens:', error);
-      throw error;
+      // Return popular tokens as fallback
+      console.log('Using fallback tokens...');
+      return this.getPopularTokens(chainId);
     }
   }
 
