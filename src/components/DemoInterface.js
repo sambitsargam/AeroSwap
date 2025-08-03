@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import HybridHTLC from '../services/htlc';
 import MEVShield from '../services/mevShield';
 import PartialFillEngine from '../services/partialFill';
