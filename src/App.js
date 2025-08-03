@@ -6,9 +6,13 @@ import MEVShield from './services/mevShield';
 import PartialFillEngine from './services/partialFill';
 import ChainManager from './services/chainAdapter';
 import DemoInterface from './components/DemoInterface';
+import LandingPage from './components/LandingPage';
 import './App.css';
 
 function App() {
+  // App state
+  const [showLandingPage, setShowLandingPage] = useState(true);
+  
   // Wallet state
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
@@ -465,6 +469,16 @@ function App() {
   };
 
   const supportedChains = OneInchService.getSupportedChains();
+
+  // Handler for entering the main app from landing page
+  const handleEnterApp = () => {
+    setShowLandingPage(false);
+  };
+
+  // Show landing page initially
+  if (showLandingPage) {
+    return <LandingPage onEnterApp={handleEnterApp} />;
+  }
 
   return (
     <div className="App">
