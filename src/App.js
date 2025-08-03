@@ -545,7 +545,7 @@ function App() {
                     <span className="feature-icon">🛡️</span>
                     <span className="feature-text">
                       <strong>MEV Shield Mode</strong>
-                      <small>Protects against front-running (>$1000)</small>
+                      <small>Protects against front-running (&gt;$1000)</small>
                     </span>
                   </label>
                 </div>
@@ -560,7 +560,7 @@ function App() {
                     <span className="feature-icon">📦</span>
                     <span className="feature-text">
                       <strong>Partial Fill Engine</strong>
-                      <small>Break large orders into smaller fills (>$5000)</small>
+                      <small>Break large orders into smaller fills (&gt;$5000)</small>
                     </span>
                   </label>
                 </div>
