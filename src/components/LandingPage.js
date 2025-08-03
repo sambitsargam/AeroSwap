@@ -5,6 +5,7 @@ const LandingPage = ({ onEnterApp }) => {
   const [currentFeature, setCurrentFeature] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [expandedFAQ, setExpandedFAQ] = useState(null);
 
   const features = [
     {
@@ -65,6 +66,10 @@ const LandingPage = ({ onEnterApp }) => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [features.length]);
+
+  const toggleFAQ = (index) => {
+    setExpandedFAQ(expandedFAQ === index ? null : index);
+  };
 
   const floatingElements = Array.from({ length: 20 }, (_, i) => (
     <div
@@ -505,53 +510,63 @@ const LandingPage = ({ onEnterApp }) => {
 
         <div className="faq-container">
           <div className="faq-item">
-            <div className="faq-question">
+            <div className="faq-question" onClick={() => toggleFAQ(0)}>
               <span>What makes AeroSwap different from other DEXs?</span>
-              <span className="faq-toggle">+</span>
+              <span className="faq-toggle">{expandedFAQ === 0 ? '−' : '+'}</span>
             </div>
-            <div className="faq-answer">
-              AeroSwap combines advanced MEV protection, cross-chain atomic swaps, and partial fill capabilities in a single platform. Our hybrid HTLC technology enables truly trustless cross-chain trading.
-            </div>
+            {expandedFAQ === 0 && (
+              <div className="faq-answer">
+                AeroSwap combines advanced MEV protection, cross-chain atomic swaps, and partial fill capabilities in a single platform. Our hybrid HTLC technology enables truly trustless cross-chain trading.
+              </div>
+            )}
           </div>
 
           <div className="faq-item">
-            <div className="faq-question">
+            <div className="faq-question" onClick={() => toggleFAQ(1)}>
               <span>Which blockchains does AeroSwap support?</span>
-              <span className="faq-toggle">+</span>
+              <span className="faq-toggle">{expandedFAQ === 1 ? '−' : '+'}</span>
             </div>
-            <div className="faq-answer">
-              We support Ethereum, Polygon, Binance Smart Chain, Bitcoin, and Solana, with more chains being added regularly through our Universal Chain Adapter SDK.
-            </div>
+            {expandedFAQ === 1 && (
+              <div className="faq-answer">
+                We support Ethereum, Polygon, Binance Smart Chain, Bitcoin, and Solana, with more chains being added regularly through our Universal Chain Adapter SDK.
+              </div>
+            )}
           </div>
 
           <div className="faq-item">
-            <div className="faq-question">
+            <div className="faq-question" onClick={() => toggleFAQ(2)}>
               <span>How does MEV protection work?</span>
-              <span className="faq-toggle">+</span>
+              <span className="faq-toggle">{expandedFAQ === 2 ? '−' : '+'}</span>
             </div>
-            <div className="faq-answer">
-              Our MEV shield uses commit-reveal schemes and private mempool access to prevent front-running. Orders are batched and executed in FIFO order to ensure fair pricing.
-            </div>
+            {expandedFAQ === 2 && (
+              <div className="faq-answer">
+                Our MEV shield uses commit-reveal schemes and private mempool access to prevent front-running. Orders are batched and executed in FIFO order to ensure fair pricing.
+              </div>
+            )}
           </div>
 
           <div className="faq-item">
-            <div className="faq-question">
+            <div className="faq-question" onClick={() => toggleFAQ(3)}>
               <span>Are there any fees for using AeroSwap?</span>
-              <span className="faq-toggle">+</span>
+              <span className="faq-toggle">{expandedFAQ === 3 ? '−' : '+'}</span>
             </div>
-            <div className="faq-answer">
-              AeroSwap charges a competitive 0.3% protocol fee on swaps. Gas fees depend on the source blockchain. MEV protection and partial fills are included at no extra cost.
-            </div>
+            {expandedFAQ === 3 && (
+              <div className="faq-answer">
+                AeroSwap charges a competitive 0.3% protocol fee on swaps. Gas fees depend on the source blockchain. MEV protection and partial fills are included at no extra cost.
+              </div>
+            )}
           </div>
 
           <div className="faq-item">
-            <div className="faq-question">
+            <div className="faq-question" onClick={() => toggleFAQ(4)}>
               <span>Is AeroSwap audited and secure?</span>
-              <span className="faq-toggle">+</span>
+              <span className="faq-toggle">{expandedFAQ === 4 ? '−' : '+'}</span>
             </div>
-            <div className="faq-answer">
-              Yes, all our smart contracts have been audited by leading security firms. We're non-custodial, meaning you always maintain control of your funds and private keys.
-            </div>
+            {expandedFAQ === 4 && (
+              <div className="faq-answer">
+                Yes, all our smart contracts have been audited by leading security firms. We're non-custodial, meaning you always maintain control of your funds and private keys.
+              </div>
+            )}
           </div>
         </div>
       </section>

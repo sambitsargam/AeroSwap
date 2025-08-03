@@ -1213,6 +1213,18 @@
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Newsletter Section */
