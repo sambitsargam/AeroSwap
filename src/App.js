@@ -7,6 +7,7 @@ import PartialFillEngine from './services/partialFill';
 import ChainManager from './services/chainAdapter';
 import DemoInterface from './components/DemoInterface';
 import LandingPage from './components/LandingPage';
+import WalletConnect from './components/WalletConnect';
 import './App.css';
 
 function App() {
@@ -46,16 +47,19 @@ function App() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Initialize advanced features
+  // Initialize AppKit and advanced features
   useEffect(() => {
-    const initializeAdvancedFeatures = async () => {
+    const initializeApp = async () => {
       try {
+        // Initialize AppKit
+        await appKit.init();
+
         // Initialize chain adapters
         await ChainManager.initializeAll();
-        
+
         // Start MEV Shield batch processor
         MEVShield.startBatchProcessor();
-        
+
         // Register demo liquidity providers
         PartialFillEngine.registerLiquidityProvider({
           address: '0x' + '1'.repeat(40),
@@ -63,35 +67,14 @@ function App() {
           maxFillSize: 1000,
           minProfitBps: 10
         });
-        
-        console.log('🚀 Advanced features initialized');
+
+        console.log('🚀 App initialized with AppKit and advanced features');
       } catch (error) {
-        console.error('Failed to initialize advanced features:', error);
+        console.error('Failed to initialize app:', error);
       }
     };
 
-    initializeAdvancedFeatures();
-  }, []);
-
-  // Auto-connect wallet on load
-  useEffect(() => {
-    const autoConnect = async () => {
-      try {
-        const connected = await WalletService.autoConnect();
-        if (connected) {
-          const state = WalletService.getWalletState();
-          setWalletConnected(true);
-          setWalletAddress(state.address);
-          setChainId(state.chainId);
-          await loadBalance();
-          await loadTokens(state.chainId);
-        }
-      } catch (error) {
-        console.error('Auto-connect failed:', error);
-      }
-    };
-
-    autoConnect();
+    initializeApp();
   }, []);
 
   // Load user balance
@@ -144,27 +127,26 @@ function App() {
     }
   }, [fromToken, toToken]);
 
-  // Connect wallet
-  const connectWallet = async () => {
-    try {
-      setError('');
-      const result = await WalletService.connect();
-      setWalletConnected(true);
-      setWalletAddress(result.address);
-      setChainId(result.chainId);
-      await loadBalance();
-      await loadTokens(result.chainId);
-      setSuccess('Wallet connected successfully!');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      setError(error.message);
-      setTimeout(() => setError(''), 5000);
-    }
-  };
+  // Handle wallet connection
+  const handleWalletConnected = useCallback(async (walletData) => {
+    setWalletConnected(true);
+    setWalletAddress(walletData.address);
+    setChainId(walletData.chainId);
+    setBalance(walletData.balance);
 
-  // Disconnect wallet
-  const disconnectWallet = () => {
-    WalletService.disconnect();
+    // Update WalletService with AppKit provider
+    if (window.ethereum) {
+      WalletService.setProvider(window.ethereum);
+      await WalletService.updateWalletState(walletData.address, walletData.chainId);
+    }
+
+    await loadTokens(walletData.chainId);
+    setSuccess('Wallet connected successfully!');
+    setTimeout(() => setSuccess(''), 3000);
+  }, []);
+
+  // Handle wallet disconnection
+  const handleWalletDisconnected = useCallback(() => {
     setWalletConnected(false);
     setWalletAddress('');
     setChainId(null);
@@ -175,7 +157,10 @@ function App() {
     setFromAmount('');
     setToAmount('');
     setQuote(null);
-  };
+
+    // Clear WalletService state
+    WalletService.clearWalletState();
+  }, []);
 
   // Get quote for swap
   const getQuote = useCallback(async () => {
@@ -506,14 +491,16 @@ function App() {
             {walletConnected ? (
               <div className="wallet-info">
                 <span className="balance">{balance} {supportedChains[chainId]?.symbol}</span>
-                <button className="wallet-button connected" onClick={disconnectWallet}>
-                  {WalletService.formatAddress(walletAddress)}
-                </button>
+                <WalletConnect
+                  onWalletConnected={handleWalletConnected}
+                  onWalletDisconnected={handleWalletDisconnected}
+                />
               </div>
             ) : (
-              <button className="wallet-button" onClick={connectWallet}>
-                Connect Wallet
-              </button>
+              <WalletConnect
+                onWalletConnected={handleWalletConnected}
+                onWalletDisconnected={handleWalletDisconnected}
+              />
             )}
           </div>
         </div>
