@@ -8,6 +8,7 @@ import ChainManager from './services/chainAdapter';
 import DemoInterface from './components/DemoInterface';
 import LandingPage from './components/LandingPage';
 import WalletConnect from './components/WalletConnect';
+import WalletPortfolio from './components/WalletPortfolio';
 import './App.css';
 
 function App() {
@@ -758,6 +759,12 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* Multi-Chain Portfolio */}
+      <WalletPortfolio 
+        walletAddress={walletAddress}
+        isConnected={walletConnected}
+      />
 
       {/* Demo Interface */}
       <DemoInterface 
