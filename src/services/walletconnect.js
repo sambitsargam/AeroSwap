@@ -9,7 +9,10 @@ import { UniversalProvider } from '@walletconnect/universal-provider';
 import { Core } from '@walletconnect/core';
 import { formatJsonRpcRequest, formatJsonRpcResult, formatJsonRpcError } from '@walletconnect/utils';
 import { getSdkError } from '@walletconnect/utils';
+import { isMobile, isAndroid, isIOS } from '@walletconnect/browser-utils';
+import { SignerConnection } from '@walletconnect/signer-connection';
 import { ethers } from 'ethers';
+import sessionManager from './walletconnect-session';
 
 class WalletConnectService {
   constructor() {
@@ -17,9 +20,14 @@ class WalletConnectService {
     this.signClient = null;
     this.universalProvider = null;
     this.core = null;
+    this.signerConnection = null;
     this.sessions = new Map();
     this.pendingRequests = new Map();
     this.eventListeners = new Map();
+    this.sessionManager = sessionManager;
+    this.isMobile = isMobile();
+    this.isAndroid = isAndroid();
+    this.isIOS = isIOS();
     
     // Configuration
     this.projectId = process.env.REACT_APP_REOWN_PROJECT_ID || 'your-project-id-here';
@@ -84,6 +92,12 @@ class WalletConnectService {
       
       // Initialize Universal Provider
       await this.initializeUniversalProvider();
+      
+      // Initialize Signer Connection
+      await this.initializeSignerConnection();
+      
+      // Setup session management
+      this.setupSessionManagement();
       
       console.log('WalletConnect service initialized successfully');
       return true;
@@ -177,6 +191,56 @@ class WalletConnectService {
     } catch (error) {
       console.error('Error initializing Universal Provider:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Initialize Signer Connection
+   */
+  async initializeSignerConnection() {
+    try {
+      this.signerConnection = new SignerConnection({
+        projectId: this.projectId,
+        metadata: this.metadata
+      });
+
+      console.log('Signer Connection initialized');
+    } catch (error) {
+      console.error('Error initializing Signer Connection:', error);
+      // Don't throw - this is optional
+    }
+  }
+
+  /**
+   * Setup session management
+   */
+  setupSessionManagement() {
+    // Start cleanup interval
+    this.sessionManager.startCleanupInterval();
+
+    // Listen to session manager events
+    this.sessionManager.on('session_added', (session) => {
+      this.sessions.set(session.topic, session);
+      this.emit('session_added', session);
+    });
+
+    this.sessionManager.on('session_removed', ({ session, reason }) => {
+      this.sessions.delete(session.topic);
+      this.emit('session_removed', { session, reason });
+    });
+
+    // Auto-reconnect existing sessions
+    if (this.signClient) {
+      this.sessionManager.autoReconnectSessions(this.signClient)
+        .then(sessions => {
+          console.log(`Auto-reconnected ${sessions.length} sessions`);
+          sessions.forEach(session => {
+            this.sessions.set(session.topic, session);
+          });
+        })
+        .catch(error => {
+          console.error('Error auto-reconnecting sessions:', error);
+        });
     }
   }
 

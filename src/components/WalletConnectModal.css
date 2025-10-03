@@ -1,0 +1,389 @@
+/* WalletConnect Modal Styles */
+.wallet-connect-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.wallet-connect-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 0 24px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-content {
+  padding: 0 24px 24px 24px;
+}
+
+.qr-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.qr-error {
+  text-align: center;
+  padding: 40px;
+  color: #e74c3c;
+}
+
+.qr-error button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.qr-error button:hover {
+  background: #5a6fd8;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-code {
+  border: 2px solid #f0f0f0;
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.copy-button {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  background: #e9ecef;
+}
+
+.wallet-options {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 24px;
+}
+
+.wallet-options h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.wallet-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.wallet-option:hover {
+  border-color: #667eea;
+  background-color: #f8f9ff;
+  transform: translateY(-1px);
+}
+
+.wallet-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.wallet-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wallet-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+}
+
+.wallet-description {
+  color: #666;
+  font-size: 14px;
+}
+
+.connection-status {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 24px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #667eea;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #667eea;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+}
+
+.help-text {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  background: #f8f9fa;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 16px 16px;
+  text-align: center;
+}
+
+.powered-by {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.powered-by strong {
+  color: #333;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .wallet-connect-modal-overlay {
+    padding: 10px;
+  }
+  
+  .wallet-connect-modal {
+    max-height: 95vh;
+  }
+  
+  .modal-header {
+    padding: 20px 20px 0 20px;
+  }
+  
+  .modal-content {
+    padding: 0 20px 20px 20px;
+  }
+  
+  .modal-footer {
+    padding: 12px 20px;
+  }
+  
+  .qr-code {
+    max-width: 250px;
+  }
+  
+  .wallet-grid {
+    gap: 8px;
+  }
+  
+  .wallet-option {
+    padding: 12px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .wallet-connect-modal {
+    background: #1a1a1a;
+    color: white;
+  }
+  
+  .modal-header {
+    border-bottom-color: #333;
+  }
+  
+  .modal-header h2 {
+    color: white;
+  }
+  
+  .close-button:hover {
+    background-color: #333;
+    color: white;
+  }
+  
+  .wallet-options {
+    border-top-color: #333;
+  }
+  
+  .wallet-options h3 {
+    color: white;
+  }
+  
+  .wallet-option {
+    border-color: #333;
+    background: #1a1a1a;
+  }
+  
+  .wallet-option:hover {
+    border-color: #667eea;
+    background-color: #2a2a3a;
+  }
+  
+  .wallet-name {
+    color: white;
+  }
+  
+  .wallet-icon {
+    background: #333;
+  }
+  
+  .connection-status {
+    border-top-color: #333;
+  }
+  
+  .modal-footer {
+    background: #2a2a2a;
+    border-top-color: #333;
+  }
+  
+  .powered-by strong {
+    color: white;
+  }
+}
