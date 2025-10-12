@@ -9,6 +9,7 @@ import DemoInterface from './components/DemoInterface';
 import LandingPage from './components/LandingPage';
 import WalletConnect from './components/WalletConnect';
 import WalletPortfolio from './components/WalletPortfolio';
+import WalletAnalytics from './components/WalletAnalytics';
 import './App.css';
 
 function App() {
@@ -764,6 +765,13 @@ function App() {
       <WalletPortfolio 
         walletAddress={walletAddress}
         isConnected={walletConnected}
+      />
+
+      {/* Wallet Analytics Dashboard */}
+      <WalletAnalytics 
+        walletAddress={walletAddress}
+        isConnected={walletConnected}
+        chainId={chainId}
       />
 
       {/* Demo Interface */}
